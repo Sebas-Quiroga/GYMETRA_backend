@@ -37,22 +37,6 @@ pipeline {
             }
         }
 
-        stage('Build admin-frontend') {
-            steps {
-                dir('frontend/admin-frontend') {
-                    sh 'docker build -t ${DOCKER_IMAGE_PREFIX}admin-frontend:latest .'
-                }
-            }
-        }
-
-        stage('Build gymetra-frontend') {
-            steps {
-                dir('frontend/gymetra-frontend') {
-                    sh 'docker build -t ${DOCKER_IMAGE_PREFIX}gymetra-frontend:latest .'
-                }
-            }
-        }
-
         stage('Deploy with Docker Compose') {
             steps {
                 sh 'docker-compose down'
