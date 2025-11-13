@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Simulador de Acceso QR</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <h2 class="card-title text-center mb-4">Acceso QR - Simulación</h2>
+                        <form id="form" class="mb-3">
+                            <div class="mb-3">
+                                <label for="userId" class="form-label">ID de usuario</label>
+                                <input type="text" class="form-control" id="userId" name="userId" required>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <button type="button" class="btn btn-primary" onclick="consultarQr()">Ver QR y Estado</button>
+                            </div>
+                        </form>
+                        <div id="qrSection" style="display:none;">
+                            <h4 class="mb-3">QR y Estado</h4>
+                            <div id="qrImg" class="mb-3 text-center"></div>
+                            <div id="qrData" class="mb-3 small text-secondary"></div>
+                            <div class="mb-3">
+                                <label for="branchId" class="form-label">Sucursal</label>
+                                <select id="branchId" name="branchId" class="form-select" required></select>
+                            </div>
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <button type="button" class="btn btn-success me-md-2" onclick="marcar('ingreso')">Marcar Entrada</button>
+                                <button type="button" class="btn btn-danger" onclick="marcar('salida')">Marcar Salida</button>
+                            </div>
+                        </div>
+                        <pre id="result" class="mt-4"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        let lastUserId = null;
+        async function consultarQr() {
+            const userId = document.getElementById('userId').value;
+            if (!userId) return;
+            lastUserId = userId;
+            // Obtener QR
+            console.log('[ENVIADO] GET /api/qr-access/user/' + userId);
+            const res = await fetch('/api/qr-access/user/' + userId);
+            const text = await res.text();
+            let data;
+            try { data = JSON.parse(text); } catch (err) { data = text; }
+            console.log('[RECIBIDO] /api/qr-access/user/' + userId + ':', data);
+            if (data && typeof data === 'object' && data.qrCode) {
+                document.getElementById('qrSection').style.display = '';
+                document.getElementById('qrData').textContent = JSON.stringify(data, null, 2);
+                mostrarQrImagen(data.qrCode);
+            } else {
+                document.getElementById('qrSection').style.display = 'none';
+                document.getElementById('qrData').textContent = '';
+                document.getElementById('qrImg').innerHTML = '';
+                document.getElementById('result').textContent = 'No se encontró QR para este usuario.';
+            }
+            // Listar sucursales
+            await cargarSucursales();
+        }
+
+        async function cargarSucursales() {
+            console.log('[ENVIADO] GET /api/branches');
+            const res = await fetch('/api/branches');
+            const branches = await res.json();
+            console.log('[RECIBIDO] /api/branches:', branches);
+            const select = document.getElementById('branchId');
+            select.innerHTML = '';
+            branches.forEach(b => {
+                const option = document.createElement('option');
+                option.value = b.branchId;
+                option.textContent = b.name + ' - ' + b.city;
+                select.appendChild(option);
+            });
+        }
+
+        function mostrarQrImagen(qrCode) {
+            const qrImgDiv = document.getElementById('qrImg');
+            qrImgDiv.innerHTML = '';
+            const qrDiv = document.createElement('div');
+            qrImgDiv.appendChild(qrDiv);
+            new QRCode(qrDiv, { text: qrCode, width: 128, height: 128 });
+        }
+
+        async function marcar(tipo) {
+            const userId = lastUserId || document.getElementById('userId').value;
+            const branchId = document.getElementById('branchId').value;
+            if (!userId || !branchId) return;
+            const endpoint = tipo === 'ingreso' ? '/api/access-log/entrada' : '/api/access-log/salida';
+            const payload = { userId, branchId };
+            console.log('[ENVIADO] POST ' + endpoint, payload);
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const text = await res.text();
+            let data;
+            try { data = JSON.parse(text); } catch (err) { data = text; }
+            console.log('[RECIBIDO] ' + endpoint + ':', data);
+            document.getElementById('result').textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        }
+    </script>
+</body>
+</html>

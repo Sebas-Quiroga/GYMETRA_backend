@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GYMETRA - Comprar Membresía (Test)</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        /* Reset y Variables */
+        * {
+            margin: 0;
+            padding: 0;
+                             <div class="form-group">
+                        <label for="userId">ID de Usuario</label>
+                        <input type="number" id="userId" required placeholder="Ej: 1, 2, 3..." min="1">
+                        <small style="color: var(--text-light); font-size: 0.85rem;">
+                            Ingresa tu ID de usuario para asociar la membresía
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="billingZip">Código Postal</label>
+                        <input type="text" id="billingZip" required placeholder="12345" maxlength="10">
+                        <small style="color: var(--text-light); font-size: 0.85rem;">
+                            Requerido por Stripe para procesar el pago
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Información de Pago</label>
+                        <div id="card-element" class="stripe-element"></div>
+                        <div id="card-errors" class="error-msg"></div>
+                    </div>: border-box;
+        }
+
+        :root {
+            --primary: #ff6b35;
+            --primary-dark: #e55a2b;
+            --secondary: #2c3e50;
+            --success: #27ae60;
+            --error: #e74c3c;
+            --warning: #f39c12;
+                   // Determinar si usar Stripe real o simulación
+                const useStripe = cardElement && 
+                    CONFIG.STRIPE_PUBLISHABLE_KEY && 
+                    CONFIG.STRIPE_PUBLISHABLE_KEY !== 'SIMULATION_MODE' &&
+                    (CONFIG.STRIPE_PUBLISHABLE_KEY.startsWith('pk_test_') || 
+                     CONFIG.STRIPE_PUBLISHABLE_KEY.startsWith('pk_live_'));     --text-dark: #2c3e50;
+            --text-light: #7f8c8d;
+            --bg-light: #f8f9fa;
+            --bg-white: #ffffff;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            --radius: 8px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: var(--radius);
+            padding: 1rem 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--primary);
+            font-size: 1.8rem;
+            font-weight: 800;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            color: white;
+            margin-bottom: 3rem;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        /* Status */
+        .status {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: var(--radius);
+            padding: 1rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        .status.error {
+            background: rgba(231, 76, 60, 0.1);
+            border: 2px solid var(--error);
+        }
+
+        .status.success {
+            background: rgba(39, 174, 96, 0.1);
+            border: 2px solid var(--success);
+        }
+
+        /* Memberships Grid */
+        .memberships-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .membership-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: var(--radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .membership-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .membership-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--bg-light);
+        }
+
+        .membership-header h3 {
+            font-size: 1.5rem;
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .price {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 0.25rem;
+            color: var(--primary);
+        }
+
+        .price .amount {
+            font-size: 2.5rem;
+            font-weight: 800;
+        }
+
+        .features {
+            list-style: none;
+            margin-bottom: 1.5rem;
+        }
+
+        .features li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--bg-light);
+        }
+
+        .features li:last-child {
+            border-bottom: none;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--radius);
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--bg-light);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+
+        .close-btn:hover {
+            color: var(--error);
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--bg-light);
+            border-radius: var(--radius);
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .stripe-element {
+            padding: 1rem;
+            border: 2px solid var(--bg-light);
+            border-radius: var(--radius);
+            margin: 1rem 0;
+        }
+
+        .error-msg {
+            color: var(--error);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .spinner {
+            border: 4px solid var(--bg-light);
+            border-left: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2rem; }
+            .memberships-grid { grid-template-columns: 1fr; }
+            .modal-content { width: 95%; padding: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                🏋️‍♂️ GYMETRA
+            </div>
+        </header>
+
+        <!-- Hero -->
+        <section class="hero">
+            <h1>Elige tu Membresía</h1>
+            <p>Transforma tu vida con GYMETRA</p>
+        </section>
+
+        <!-- Status -->
+        <div id="status" class="status hidden"></div>
+
+        <!-- Loading -->
+        <div id="loading" class="loading hidden">
+            <div class="spinner"></div>
+            <p>Cargando membresías...</p>
+        </div>
+
+        <!-- Memberships -->
+        <div id="memberships" class="memberships-grid">
+            <!-- Se llenarán dinámicamente -->
+        </div>
+
+        <!-- Modal de Compra -->
+        <div id="purchaseModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Completar Compra</h3>
+                    <button class="close-btn" onclick="closePurchaseModal()">&times;</button>
+                </div>
+
+                <div id="selectedMembership"></div>
+
+                <form id="paymentForm">
+                    <div class="form-group">
+                        <label for="userId">ID de Usuario *</label>
+                        <input type="number" id="userId" required placeholder="Ej: 1, 2, 3..." min="1">
+                        <small style="color: var(--text-light); font-size: 0.85rem;">
+                            Ingresa tu ID de usuario para asociar la membresía
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Información de Pago</label>
+                        <div id="card-element" class="stripe-element"></div>
+                        <div id="card-errors" class="error-msg"></div>
+                    </div>
+
+                    <button type="submit" id="payBtn" class="btn btn-primary">
+                        💳 Pagar Ahora
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal de Éxito -->
+        <div id="successModal" class="modal">
+            <div class="modal-content" style="text-align: center;">
+                <h2 style="color: var(--success); margin-bottom: 1rem;">¡Pago Exitoso! ✅</h2>
+                <p>Tu membresía ha sido activada correctamente.</p>
+                <button class="btn btn-primary" onclick="closeSuccessModal()" style="margin-top: 1rem;">
+                    Continuar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuración - CAMBIAR POR TUS DATOS REALES
+        const CONFIG = {
+            API_BASE_URL: 'http://localhost:8081/api',
+            STRIPE_PUBLISHABLE_KEY: 'pk_test_51S9c29RPJMMOJ1bv1BejUA5NyJ7gsg0rvFcEjdAa8JuyMI7Zs3S9aCklSsGvTfGE2rVa6fhbwug33zIqK7b1ni8M00SLlPxKFx' // Clave real de Stripe
+        };
+
+        // Variables globales
+        let stripe, elements, cardElement;
+        let selectedMembership = null;
+
+        // Datos de prueba (simulando tu API)
+        const MOCK_MEMBERSHIPS = [
+            {
+                membershipId: 1,
+                name: "Básica",
+                price: 29.99,
+                duration: 30,
+                description: "Acceso completo al gimnasio por 30 días"
+            },
+            {
+                membershipId: 2,
+                name: "Premium",
+                price: 49.99,
+                duration: 30,
+                description: "Incluye clases grupales y plan nutricional"
+            },
+            {
+                membershipId: 3,
+                name: "Anual",
+                price: 299.99,
+                duration: 365,
+                description: "Mejor precio - Membresía completa por 1 año"
+            }
+        ];
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        async function initializeApp() {
+            console.log('🚀 Iniciando aplicación GYMETRA...');
+            showStatus('Iniciando aplicación...', 'info');
+            
+            // Inicializar Stripe (solo si tienes clave válida)
+            if (CONFIG.STRIPE_PUBLISHABLE_KEY !== 'SIMULATION_MODE' && 
+                (CONFIG.STRIPE_PUBLISHABLE_KEY.startsWith('pk_test_') || CONFIG.STRIPE_PUBLISHABLE_KEY.startsWith('pk_live_'))) {
+                try {
+                    console.log('💳 Inicializando Stripe...');
+                    stripe = Stripe(CONFIG.STRIPE_PUBLISHABLE_KEY);
+                    elements = stripe.elements();
+                    cardElement = elements.create('card');
+                    console.log('✅ Stripe inicializado correctamente');
+                    showStatus('Stripe inicializado correctamente', 'success');
+                } catch (error) {
+                    console.error('❌ Error al inicializar Stripe:', error);
+                    showStatus('Error al inicializar Stripe: ' + error.message, 'error');
+                }
+            } else {
+                console.log('⚠️ Stripe no configurado - usando modo simulación');
+                showStatus('⚠️ Modo de prueba activado (sin Stripe)', 'warning');
+            }
+
+            // Cargar membresías
+            console.log('📋 Cargando membresías...');
+            await loadMemberships();
+            
+            console.log('🎉 Aplicación lista para usar');
+        }
+
+        async function loadMemberships() {
+            showLoading(true);
+            hideStatus();
+
+            try {
+                let memberships;
+                
+                // Intentar cargar desde API real primero
+                try {
+                    const response = await fetch(`${CONFIG.API_BASE_URL}/memberships`);
+                    if (response.ok) {
+                        memberships = await response.json();
+                        showStatus('✅ Membresías cargadas desde API', 'success');
+                    } else {
+                        throw new Error('API no disponible');
+                    }
+                } catch (apiError) {
+                    // Usar datos de prueba
+                    memberships = MOCK_MEMBERSHIPS;
+                    showStatus('🧪 Usando datos de prueba (API no disponible)', 'warning');
+                }
+
+                displayMemberships(memberships);
+                
+            } catch (error) {
+                showStatus('❌ Error al cargar membresías: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function displayMemberships(memberships) {
+            const container = document.getElementById('memberships');
+            
+            container.innerHTML = memberships.map(membership => `
+                <div class="membership-card">
+                    <div class="membership-header">
+                        <h3>${membership.name}</h3>
+                        <div class="price">
+                            <span>$</span>
+                            <span class="amount">${membership.price}</span>
+                            <span>/${membership.duration}d</span>
+                        </div>
+                    </div>
+                    
+                    <ul class="features">
+                        <li>✅ Acceso completo al gimnasio</li>
+                        <li>✅ Uso de todos los equipos</li>
+                        <li>✅ Vestuarios y duchas</li>
+                        ${membership.duration > 30 ? '<li>✅ Clases grupales</li>' : ''}
+                        ${membership.duration > 90 ? '<li>✅ Plan nutricional</li>' : ''}
+                    </ul>
+                    
+                    <button class="btn btn-primary" onclick="selectMembership(${membership.membershipId}, '${membership.name}', ${membership.price}, ${membership.duration})">
+                        Comprar Ahora
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function selectMembership(id, name, price, duration) {
+            selectedMembership = { membershipId: id, name, price, duration };
+            showPurchaseModal();
+        }
+
+        function showPurchaseModal() {
+            const modal = document.getElementById('purchaseModal');
+            const membershipDiv = document.getElementById('selectedMembership');
+            
+            membershipDiv.innerHTML = `
+                <div style="background: var(--bg-light); padding: 1rem; border-radius: var(--radius); margin-bottom: 1.5rem;">
+                    <h4>📋 Resumen de Compra</h4>
+                    <p><strong>Membresía:</strong> ${selectedMembership.name}</p>
+                    <p><strong>Duración:</strong> ${selectedMembership.duration} días</p>
+                    <p style="color: var(--primary); font-weight: bold; font-size: 1.2rem;">
+                        <strong>Total:</strong> $${selectedMembership.price} USD
+                    </p>
+                    <hr style="margin: 1rem 0; border: none; border-top: 1px solid var(--text-light);">
+                    <small style="color: var(--text-light);">
+                        💡 La membresía se asociará al ID de usuario que ingreses abajo
+                    </small>
+                </div>
+            `;
+
+            // Montar Stripe Elements solo si está disponible y configurado correctamente
+            if (cardElement && CONFIG.STRIPE_PUBLISHABLE_KEY !== 'SIMULATION_MODE' && 
+                (CONFIG.STRIPE_PUBLISHABLE_KEY.startsWith('pk_test_') || CONFIG.STRIPE_PUBLISHABLE_KEY.startsWith('pk_live_'))) {
+                try {
+                    cardElement.mount('#card-element');
+                    cardElement.on('change', function(event) {
+                        const displayError = document.getElementById('card-errors');
+                        displayError.textContent = event.error ? event.error.message : '';
+                    });
+                } catch (error) {
+                    console.log('Error montando Stripe Elements:', error);
+                    // Ocultar la sección de pago si hay error
+                    document.querySelector('[for="Información de Pago"]').parentElement.style.display = 'none';
+                }
+            } else {
+                // Si no hay Stripe configurado, ocultar la sección de tarjeta
+                const cardSection = document.querySelector('#card-element').parentElement;
+                cardSection.innerHTML = `
+                    <div style="background: var(--warning); color: white; padding: 1rem; border-radius: var(--radius); text-align: center;">
+                        🧪 Modo de Prueba - No se requiere tarjeta
+                    </div>
+                `;
+            }
+
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closePurchaseModal() {
+            const modal = document.getElementById('purchaseModal');
+            modal.classList.remove('show');
+            document.body.style.overflow = 'auto';
+            
+            // Desmontar Stripe Elements solo si está montado
+            if (cardElement) {
+                try {
+                    cardElement.unmount();
+                } catch (error) {
+                    console.log('Stripe Elements ya desmontado:', error);
+                }
+            }
+            
+            // Limpiar formulario
+            document.getElementById('paymentForm').reset();
+            document.getElementById('card-errors').textContent = '';
+        }
+
+        function closeSuccessModal() {
+            document.getElementById('successModal').classList.remove('show');
+            selectedMembership = null;
+        }
+
+        // Manejo del formulario de pago
+        document.getElementById('paymentForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            console.log('🔄 Iniciando proceso de pago...');
+            
+            // Validar que el userId sea válido
+            const userId = document.getElementById('userId').value;
+            if (!userId || isNaN(userId) || parseInt(userId) < 1) {
+                showStatus('❌ Por favor ingresa un ID de usuario válido', 'error');
+                document.getElementById('userId').focus();
+                return;
+            }
+            
+            // Validar código postal (si Stripe está activo)
+            const billingZipInput = document.getElementById('billingZip');
+            if (billingZipInput) {
+                const billingZip = billingZipInput.value.trim();
+                if (!billingZip || billingZip.length < 3) {
+                    showStatus('❌ Por favor ingresa un código postal válido', 'error');
+                    billingZipInput.focus();
+                    return;
+                }
+            }
+            
+            console.log('✅ Usuario ID válido:', userId);
+            
+            const payBtn = document.getElementById('payBtn');
+            payBtn.disabled = true;
+            payBtn.innerHTML = '⏳ Procesando...';
+
+            try {
+                // Determinar si usar Stripe real o simulación
+                const useStripe = stripe && cardElement && 
+                    CONFIG.STRIPE_PUBLISHABLE_KEY !== 'SIMULATION_MODE' &&
+                    (CONFIG.STRIPE_PUBLISHABLE_KEY.startsWith('pk_test_') || 
+                     CONFIG.STRIPE_PUBLISHABLE_KEY.startsWith('pk_live_'));
+
+                console.log('💳 Modo de pago:', useStripe ? 'Stripe Real' : 'Simulación');
+                console.log('💳 Clave configurada:', CONFIG.STRIPE_PUBLISHABLE_KEY);
+
+                if (useStripe) {
+                    // Procesar con Stripe real
+                    await processStripePayment();
+                } else {
+                    // Simular pago exitoso
+                    await simulatePayment();
+                }
+
+            } catch (error) {
+                console.error('❌ Error en el pago:', error);
+                showStatus('❌ Error en el pago: ' + error.message, 'error');
+            } finally {
+                payBtn.disabled = false;
+                payBtn.innerHTML = '💳 Pagar Ahora';
+            }
+        });
+
+        async function processStripePayment() {
+            try {
+                console.log('🔄 Iniciando processStripePayment...');
+                
+                // Debug: verificar elementos disponibles
+                console.log('🔍 Elementos disponibles:');
+                console.log('- userId:', document.getElementById('userId'));
+                console.log('- billingZip:', document.getElementById('billingZip'));
+                console.log('- cardElement:', cardElement);
+                
+                // 1. Crear PaymentIntent
+                const response = await fetch(`${CONFIG.API_BASE_URL}/payments/create-payment-intent`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        membershipId: selectedMembership.membershipId,
+                        userId: parseInt(document.getElementById('userId').value)
+                    })
+                });
+
+                if (!response.ok) throw new Error('Error al crear PaymentIntent');
+
+                const { clientSecret } = await response.json();
+
+                // 2. Confirmar pago con información de facturación
+                console.log('🔍 Buscando elemento billingZip...');
+                const billingZipElement = document.getElementById('billingZip');
+                console.log('🔍 Elemento encontrado:', billingZipElement);
+                
+                let billingZip;
+                if (billingZipElement && billingZipElement.value) {
+                    billingZip = billingZipElement.value;
+                    console.log('✅ Usando código postal del formulario:', billingZip);
+                } else {
+                    billingZip = '12345'; // Valor por defecto para pruebas
+                    console.log('⚠️ Usando código postal por defecto:', billingZip);
+                }
+                
+                const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+                    payment_method: {
+                        card: cardElement,
+                        billing_details: {
+                            address: {
+                                postal_code: billingZip
+                            }
+                        }
+                    }
+                });
+
+                if (error) throw error;
+
+                // 3. Confirmar en backend con el ID real del PaymentIntent
+                const confirmResponse = await fetch(`${CONFIG.API_BASE_URL}/payments/confirm-payment`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        paymentIntentId: paymentIntent.id,
+                        membershipId: selectedMembership.membershipId,
+                        userId: parseInt(document.getElementById('userId').value)
+                    })
+                });
+
+                if (!confirmResponse.ok) {
+                    const errorText = await confirmResponse.text();
+                    throw new Error('Error al confirmar en backend: ' + errorText);
+                }
+
+                const confirmResult = await confirmResponse.json();
+                console.log('✅ Pago confirmado en backend:', confirmResult);
+
+                showPaymentSuccess();
+
+            } catch (error) {
+                throw new Error('Error en Stripe: ' + error.message);
+            }
+        }
+
+        async function simulatePayment() {
+            const userId = document.getElementById('userId').value;
+            
+            console.log('🧪 Iniciando simulación de pago...');
+            showStatus(`🧪 Simulando pago para usuario ID: ${userId}...`, 'info');
+            
+            // Simular delay de procesamiento
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Simular creación de UserMembership
+            const paymentData = {
+                userId: parseInt(userId),
+                membershipId: selectedMembership.membershipId,
+                membershipName: selectedMembership.name,
+                membershipPrice: selectedMembership.price,
+                membershipDuration: selectedMembership.duration,
+                timestamp: new Date().toISOString()
+            };
+            
+            console.log('📋 Datos simulados del pago:', paymentData);
+            
+            // Simular respuesta exitosa
+            console.log('✅ Pago simulado exitosamente');
+            showPaymentSuccess();
+        }
+
+        function showPaymentSuccess() {
+            const userId = document.getElementById('userId').value;
+            closePurchaseModal();
+            
+            // Actualizar el modal de éxito con información específica
+            const successModal = document.getElementById('successModal');
+            const modalContent = successModal.querySelector('.modal-content');
+            modalContent.innerHTML = `
+                <div style="text-align: center;">
+                    <h2 style="color: var(--success); margin-bottom: 1rem;">¡Pago Exitoso! ✅</h2>
+                    <p><strong>Usuario ID:</strong> ${userId}</p>
+                    <p><strong>Membresía:</strong> ${selectedMembership.name}</p>
+                    <p><strong>Duración:</strong> ${selectedMembership.duration} días</p>
+                    <p><strong>Monto:</strong> $${selectedMembership.price} USD</p>
+                    <hr style="margin: 1rem 0; border: none; border-top: 1px solid var(--text-light);">
+                    <p style="color: var(--text-light); font-size: 0.9rem;">
+                        La membresía ha sido asociada correctamente a tu cuenta.
+                    </p>
+                    <button class="btn btn-primary" onclick="closeSuccessModal()" style="margin-top: 1rem;">
+                        Continuar
+                    </button>
+                </div>
+            `;
+            
+            successModal.classList.add('show');
+            showStatus('✅ ¡Pago procesado exitosamente!', 'success');
+        }
+
+        // Funciones de utilidad
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.classList.remove('hidden');
+        }
+
+        function hideStatus() {
+            document.getElementById('status').classList.add('hidden');
+        }
+
+        function showLoading(show) {
+            const loading = document.getElementById('loading');
+            const memberships = document.getElementById('memberships');
+            
+            if (show) {
+                loading.classList.remove('hidden');
+                memberships.style.display = 'none';
+            } else {
+                loading.classList.add('hidden');
+                memberships.style.display = 'grid';
+            }
+        }
+
+        // Cerrar modales con Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closePurchaseModal();
+                closeSuccessModal();
+            }
+        });
+
+        // Info para desarrollo
+        console.log('🏋️‍♂️ GYMETRA Test App iniciada');
+        console.log('📡 API URL:', CONFIG.API_BASE_URL);
+        console.log('💳 Stripe Mode:', CONFIG.STRIPE_PUBLISHABLE_KEY === 'SIMULATION_MODE' ? 'SIMULACIÓN' : CONFIG.STRIPE_PUBLISHABLE_KEY.substring(0, 10) + '...');
+        console.log('ℹ️  Modo actual: ' + (CONFIG.STRIPE_PUBLISHABLE_KEY === 'SIMULATION_MODE' ? 'SIMULACIÓN DE PAGO' : 'STRIPE REAL'));
+        console.log('ℹ️  Para configurar: edita las variables CONFIG al inicio del script');
+    </script>
+</body>
+</html>
