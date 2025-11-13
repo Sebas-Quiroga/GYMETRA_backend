@@ -16,7 +16,7 @@ pipeline {
         stage('Build GYMETR-login Backend') {
             steps {
                 dir('backend/GYMETR-login') {
-                    sh 'docker build -t ${DOCKER_IMAGE_PREFIX}gymetr-login:latest .'
+                    bat 'docker build -t %DOCKER_IMAGE_PREFIX%gymetr-login:latest .'
                 }
             }
         }
@@ -24,7 +24,7 @@ pipeline {
         stage('Build GYMETR-Membership Backend') {
             steps {
                 dir('backend/GYMETR-Membership') {
-                    sh 'docker build -t ${DOCKER_IMAGE_PREFIX}gymetr-membership:latest .'
+                    bat 'docker build -t %DOCKER_IMAGE_PREFIX%gymetr-membership:latest .'
                 }
             }
         }
@@ -32,22 +32,22 @@ pipeline {
         stage('Build GYMETRA - Qr Backend') {
             steps {
                 dir('backend/GYMETRA - Qr') {
-                    sh 'docker build -t ${DOCKER_IMAGE_PREFIX}gymetra-qr:latest .'
+                    bat 'docker build -t %DOCKER_IMAGE_PREFIX%gymetra-qr:latest .'
                 }
             }
         }
 
         stage('Deploy with Docker Compose') {
             steps {
-                sh 'docker-compose down'
-                sh 'docker-compose up -d --build'
+                bat 'docker-compose down'
+                bat 'docker-compose up -d --build'
             }
         }
     }
 
     post {
         always {
-            sh 'docker system prune -f'
+            bat 'docker system prune -f'
         }
         success {
             echo 'Deployment successful!'
