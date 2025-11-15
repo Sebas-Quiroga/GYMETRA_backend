@@ -33,7 +33,7 @@ public class UserMembershipClient {
     }
 
     public UserMembershipResponse getUserMembershipById(Integer id) {
-        String url = "http://localhost:8080/api/auth/users/" + id;
+        String url = "http://3.15.181.40:8080/api/auth/users/" + id;
         UserResponse user = restTemplate.getForObject(url, UserResponse.class);
 
         if (user != null) {
@@ -55,7 +55,7 @@ public class UserMembershipClient {
 
     // Nuevo método para actualizar el estado
     public void updateMembershipStatus(Integer id, String status) {
-        String url = "http://localhost:8081/api/user-memberships/" + id + "/status";
+        String url = "http://3.15.181.40/api/user-memberships/" + id + "/status";
         Map<String, String> request = Map.of("status", status);
         restTemplate.put(url, request);
     }

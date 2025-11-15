@@ -11,7 +11,7 @@ import org.springframework.web.client.RestTemplate;
 @RequestMapping("/api/memberships-proxy")
 public class MembershipProxyController {
     private final RestTemplate restTemplate = new RestTemplate();
-    private final String MEMBERSHIP_API = "http://localhost:8081/api/user-memberships/user/";
+    private final String MEMBERSHIP_API = "http://3.15.181.40:8081/api/user-memberships/user/";
 
     @GetMapping("/{userId}")
     public ResponseEntity<?> getMembership(@PathVariable Long userId) {

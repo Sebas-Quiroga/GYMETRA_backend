@@ -71,7 +71,7 @@ public class SecurityConfig {
         configuration.addAllowedOriginPattern("https://*");
         configuration.addAllowedOrigin("http://localhost:8101");
         configuration.addAllowedOrigin("http://localhost:8100");
-        configuration.addAllowedOrigin("http://175.100.1.214"); // tu IP específica
+        configuration.addAllowedOrigin("http://3.15.181.40"); // tu IP específica
         configuration.addAllowedOrigin("http://192.168.0.11");  // IP local (si usas red LAN)
 
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
