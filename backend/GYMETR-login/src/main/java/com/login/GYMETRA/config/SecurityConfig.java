@@ -40,14 +40,7 @@ public class SecurityConfig {
 
                         // Rutas públicas
                         .requestMatchers(
-                                "/api/auth/register",
-                                "/api/auth/login",
-                                "/api/auth/forgot-password",
-                                "/api/auth/reset-password",
-                                "/api/auth/validate-token",
-                                "/api/auth/users",
-                                "/api/auth/users/{userId}",              // ✅ ahora accesible sin JWT
-                                "/api/auth/users/{userId}/status",       // ✅ actualizar estado de usuario
+                                "/api/auth/**",                         // ✅ todas las rutas de auth públicas
                                 "/api/roles/**",                         // ✅ rutas de roles públicas
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
@@ -67,12 +60,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         // ✅ Orígenes permitidos
-        configuration.addAllowedOriginPattern("http://*");
-        configuration.addAllowedOriginPattern("https://*");
-        configuration.addAllowedOrigin("http://localhost:8101");
-        configuration.addAllowedOrigin("http://localhost:8100");
-        configuration.addAllowedOrigin("http://3.15.181.40"); // tu IP específica
-        configuration.addAllowedOrigin("http://192.168.0.11");  // IP local (si usas red LAN)
+        configuration.setAllowedOriginPatterns(List.of("*"));
 
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
