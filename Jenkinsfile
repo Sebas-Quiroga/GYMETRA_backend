@@ -2,45 +2,65 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE_PREFIX = 'develop-'
-        DOCKER_REGISTRY = 'your-registry.com' // Replace with your Docker registry
+        DOCKER_USER = 'quiroga148'
+        EC2_HOST = '3.15.181.40'
     }
 
     stages {
+
         stage('Checkout') {
             steps {
-                checkout scm
+                git branch: 'main', url: 'https://github.com/Sebas-Quiroga/GYMETRA_backend.git'
             }
         }
 
-        stage('Build GYMETR-login Backend') {
+        stage('Build Docker Images') {
             steps {
                 dir('backend/GYMETR-login') {
-                    bat 'docker build -t %DOCKER_IMAGE_PREFIX%gymetr-login:latest .'
+                    bat "docker build -t ${DOCKER_USER}/gymetr-login:latest ."
                 }
-            }
-        }
-
-        stage('Build GYMETR-Membership Backend') {
-            steps {
                 dir('backend/GYMETR-Membership') {
-                    bat 'docker build -t %DOCKER_IMAGE_PREFIX%gymetr-membership:latest .'
+                    bat "docker build -t ${DOCKER_USER}/gymetr-membership:latest ."
                 }
-            }
-        }
-
-        stage('Build GYMETRA - Qr Backend') {
-            steps {
                 dir('backend/GYMETRA - Qr') {
-                    bat 'docker build -t %DOCKER_IMAGE_PREFIX%gymetra-qr:latest .'
+                    bat "docker build -t ${DOCKER_USER}/gymetra-qr:latest ."
                 }
             }
         }
 
-        stage('Deploy with Docker Compose') {
+        stage('Login to DockerHub') {
             steps {
-                bat 'docker-compose down'
-                bat 'docker-compose up -d --build'
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                        
+                    bat """
+                    echo %PASS% | docker login -u %USER% --password-stdin
+                    """
+                }
+            }
+        }
+
+        stage('Push Images to DockerHub') {
+            steps {
+                bat "docker push ${DOCKER_USER}/gymetr-login:latest"
+                bat "docker push ${DOCKER_USER}/gymetr-membership:latest"
+                bat "docker push ${DOCKER_USER}/gymetra-qr:latest"
+            }
+        }
+
+        stage('Deploy on AWS EC2') {
+            steps {
+                sshagent(['aws_ssh_key']) {
+                    sh """
+                    ssh -o StrictHostKeyChecking=no ubuntu@${EC2_HOST} '
+                        mkdir -p ~/deploy &&
+                        cd ~/deploy &&
+                        echo "Descargando imagenes..." &&
+                        docker compose -f docker-compose.aws.yml pull &&
+                        docker compose -f docker-compose.aws.yml up -d --remove-orphans
+                    '
+                    """
+                }
             }
         }
     }
@@ -50,10 +70,10 @@ pipeline {
             bat 'docker system prune -f'
         }
         success {
-            echo 'Deployment successful!'
+            echo 'Despliegue EXITOSO en AWS 🚀🔥'
         }
         failure {
-            echo 'Deployment failed!'
+            echo 'El despliegue falló ❌'
         }
     }
 }
