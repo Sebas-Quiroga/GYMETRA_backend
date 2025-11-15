@@ -4,26 +4,27 @@ pipeline {
     environment {
         DOCKER_USER = 'quiroga148'
         EC2_HOST = '3.15.181.40'
+        SSH_KEY = 'C:\\ProgramData\\Jenkins\\.ssh\\ec2-key.ppk'
     }
 
     stages {
 
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/Sebas-Quiroga/GYMETRA_backend.git'
+                git branch: 'develop', url: 'https://github.com/Sebas-Quiroga/GYMETRA_backend.git'
             }
         }
 
         stage('Build Docker Images') {
             steps {
                 dir('backend/GYMETR-login') {
-                    bat "docker build -t ${DOCKER_USER}/gymetr-login:latest ."
+                    bat "docker build -t %DOCKER_USER%/gymetr-login:latest ."
                 }
                 dir('backend/GYMETR-Membership') {
-                    bat "docker build -t ${DOCKER_USER}/gymetr-membership:latest ."
+                    bat "docker build -t %DOCKER_USER%/gymetr-membership:latest ."
                 }
-                dir('backend/GYMETRA - Qr') {
-                    bat "docker build -t ${DOCKER_USER}/gymetra-qr:latest ."
+                dir('backend/GYMETRA-qr') {
+                    bat "docker build -t %DOCKER_USER%/gymetra-qr:latest ."
                 }
             }
         }
@@ -32,7 +33,7 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds',
                     usernameVariable: 'USER', passwordVariable: 'PASS')]) {
-                        
+
                     bat """
                     echo %PASS% | docker login -u %USER% --password-stdin
                     """
@@ -42,25 +43,18 @@ pipeline {
 
         stage('Push Images to DockerHub') {
             steps {
-                bat "docker push ${DOCKER_USER}/gymetr-login:latest"
-                bat "docker push ${DOCKER_USER}/gymetr-membership:latest"
-                bat "docker push ${DOCKER_USER}/gymetra-qr:latest"
+                bat "docker push %DOCKER_USER%/gymetr-login:latest"
+                bat "docker push %DOCKER_USER%/gymetr-membership:latest"
+                bat "docker push %DOCKER_USER%/gymetra-qr:latest"
             }
         }
 
         stage('Deploy on AWS EC2') {
             steps {
-                sshagent(['aws_ssh_key']) {
-                    sh """
-                    ssh -o StrictHostKeyChecking=no ubuntu@${EC2_HOST} '
-                        mkdir -p ~/deploy &&
-                        cd ~/deploy &&
-                        echo "Descargando imagenes..." &&
-                        docker compose -f docker-compose.aws.yml pull &&
-                        docker compose -f docker-compose.aws.yml up -d --remove-orphans
-                    '
-                    """
-                }
+                bat """
+                plink -i "%SSH_KEY%" -ssh ubuntu@%EC2_HOST% ^
+                    "cd ~/deploy && docker compose -f docker-compose.aws.yml pull && docker compose -f docker-compose.aws.yml up -d --remove-orphans"
+                """
             }
         }
     }
