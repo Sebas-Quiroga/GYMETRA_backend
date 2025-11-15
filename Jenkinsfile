@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_USER = 'quiroga148'
-        EC2_HOST = '3.15.181.40'
+        EC2_HOST = '3.14.191.19'
         SSH_KEY = 'C:\\ProgramData\\Jenkins\\.ssh\\ec2-key.ppk'
     }
 
