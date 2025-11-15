@@ -22,7 +22,7 @@ pipeline {
                 dir('backend/GYMETR-Membership') {
                     bat "docker build -t ${DOCKER_USER}/gymetr-membership:latest ."
                 }
-                dir('backend/GYMETRA - Qr') {
+                dir('backend/GYMETRA-qr') {
                     bat "docker build -t ${DOCKER_USER}/gymetra-qr:latest ."
                 }
             }
