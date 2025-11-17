@@ -3,35 +3,63 @@
 🏋️ **Gym Membership Management System - Backend**
 
 📋 **Descripción**  
-El backend de **GYMETRA** es una solución distribuida para la gestión de membresías de gimnasio. Implementado como un microservicio utilizando **Spring Boot 3.x** y **PostgreSQL**. Esta API proporciona servicios para la autenticación de usuarios, gestión de membresías, procesamiento de pagos, control de acceso mediante código QR y generación de reportes.
+El backend de **GYMETRA** es un sistema distribuido para la gestión integral de membresías de gimnasio. Desarrollado como proyecto académico del curso de **Sistemas Distribuidos**, implementado con **Spring Boot 3.x** y **PostgreSQL**.  
+Incluye autenticación, manejo de usuarios, membresías, pagos, control de acceso con QR y reportes.
 
-✨ **Características Clave**  
+---
+
+## ✨ Características Clave
+
 - 🔐 **Autenticación y Autorización** con JWT  
-- 👥 **Gestión de Usuarios** (registro, inicio de sesión, perfiles)  
+- 👥 **Gestión de Usuarios** (registro, login, perfiles)  
 - 💳 **Gestión de Membresías** (registro, renovación, suspensión)  
-- 💰 **Procesamiento de Pagos** con integración externa  
-- 📱 **Control de Acceso con QR**  
-- 📊 **Reportes y Análisis** de asistencia e ingresos
+- 💰 **Procesamiento de Pagos** integrado  
+- 📱 **Control de Acceso con QR** en tiempo real  
+- 📊 **Reportes y Análisis** de asistencia e ingresos  
+- 🏗️ **Arquitectura distribuida basada en microservicios**
 
 ---
 
-🔗 **Enlace al Repositorio Secundario**  
-[GYMETRA Backend](https://github.com/Sebas-Quiroga/GYMETRA_backend.git)
+## 🏗️ Arquitectura del Sistema
+
+### Microservicios Principales
+- **Auth & Users Service**: inicio de sesión, roles, seguridad  
+- **Memberships Service**: planes y membresías  
+- **Payments Service**: pagos y conciliación  
+- **Access Control Service**: validación QR y registro de acceso  
+- **Reports Service**: analítica e informes  
+- **API Gateway**: enrutamiento y políticas cross-cutting  
+
+### Tecnologías
+
+**Backend**
+- Spring Boot 3.x  
+- Spring Security + JWT  
+- PostgreSQL  
+- RabbitMQ / Kafka  
+- OpenAPI - Swagger  
+
+**Frontend**
+- Vue.js 3  
+- Ionic + Vue  
+- Pinia / Vuex  
+
+**Infraestructura**
+- Docker  
+- Docker Compose  
+- CI/CD con Jenkins  
 
 ---
 
-🏗️ **Tecnologías Utilizadas**  
-- **Framework**: Spring Boot 3.x  
-- **Base de Datos**: PostgreSQL  
-- **Seguridad**: Spring Security + JWT  
-- **Mensajería**: RabbitMQ/Apache Kafka  
-- **Documentación**: OpenAPI/Swagger
+## 🔧 Instalación y Configuración
 
----
+### 1. Requisitos Previos
+- Java 17+  
+- PostgreSQL 14+  
+- Node.js 18+  
+- Git  
 
-🔧 **Instalación y Configuración**  
-
-1. **Clonar el repositorio**  
+### 2. Clonar el Repositorio
 ```bash
 git clone https://github.com/Sebas-Quiroga/GYMETRA_backend.git
 cd GYMETRA_backend

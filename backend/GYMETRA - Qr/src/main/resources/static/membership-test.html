@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Probar Consulta Membresía</title>
+</head>
+<body>
+    <h2>Consulta Membresía por ID</h2>
+    <form id="form">
+        <label for="userId">ID de usuario:</label>
+        <input type="text" id="userId" name="userId" required>
+        <button type="submit">Consultar</button>
+    </form>
+    <pre id="result"></pre>
+    <script>
+        document.getElementById('form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const userId = document.getElementById('userId').value;
+            try {
+                const res = await fetch('/api/memberships-proxy/' + userId);
+                const text = await res.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (err) {
+                    data = text;
+                }
+                document.getElementById('result').textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+            } catch (err) {
+                document.getElementById('result').textContent = 'Error: ' + err;
+            }
+        });
+    </script>
+</body>
+</html>

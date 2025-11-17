@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Probar Edición de Usuario</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; }
+        label { display: block; margin-top: 1em; }
+        input, button { margin-top: 0.5em; }
+        #response { margin-top: 2em; white-space: pre-wrap; background: #f4f4f4; padding: 1em; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Probar Edición de Usuario (PUT /api/auth/users/{userId})</h1>
+    <form id="editUserForm">
+        <label>
+            ID de usuario:
+            <input type="number" id="userId" required value="7">
+        </label>
+        <label>
+            Nombre:
+            <input type="text" id="firstName">
+        </label>
+        <label>
+            Apellido:
+            <input type="text" id="lastName">
+        </label>
+        <label>
+            Email:
+            <input type="email" id="email">
+        </label>
+        <label>
+            Teléfono:
+            <input type="text" id="phone">
+        </label>
+        <label>
+            URL de foto:
+            <input type="text" id="photoUrl">
+        </label>
+        <label>
+            Contraseña (opcional):
+            <input type="password" id="password">
+        </label>
+        <button type="submit">Enviar</button>
+    </form>
+    <div id="response"></div>
+    <script>
+        document.getElementById('editUserForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const userId = document.getElementById('userId').value;
+            const data = {
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                photoUrl: document.getElementById('photoUrl').value,
+                password: document.getElementById('password').value
+            };
+            // Elimina campos vacíos
+            Object.keys(data).forEach(key => { if (!data[key]) delete data[key]; });
+            const responseDiv = document.getElementById('response');
+            responseDiv.textContent = 'Enviando...';
+            try {
+                const res = await fetch(`http://localhost:8080/api/auth/users/${userId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                const text = await res.text();
+                responseDiv.textContent = `Código: ${res.status}\n\nRespuesta:\n${text}`;
+            } catch (err) {
+                responseDiv.textContent = 'Error: ' + err;
+            }
+        });
+    </script>
+</body>
+</html>
