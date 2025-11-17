@@ -1,0 +1,61 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: gymdb_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
+    ports:
+      - "5000:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    container_name: develop-postgres
+    restart: unless-stopped
+
+  gymetr-login:
+    build: ./backend/GYMETR-login
+    ports:
+      - "8080:8080"
+    container_name: develop-gymetr-login
+    depends_on:
+      - postgres
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/gymdb_dev
+
+  gymetr-membership:
+    build: ./backend/GYMETR-Membership
+    ports:
+      - "8081:8081"
+    container_name: develop-gymetr-membership
+    depends_on:
+      - postgres
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/gymdb_dev
+
+  gymetra-qr:
+    build: ./backend/GYMETRA - Qr
+    ports:
+      - "8090:8090"
+    container_name: develop-gymetra-qr
+    depends_on:
+      - postgres
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/gymdb_dev
+
+  admin-frontend:
+    build: ./frontend/admin-frontend
+    ports:
+      - "8101:80"
+    container_name: develop-admin-frontend
+
+  gymetra-frontend:
+    build: ./frontend/gymetra-frontend
+    ports:
+      - "8100:80"
+    container_name: develop-gymetra-frontend
+
+volumes:
+  postgres_data:

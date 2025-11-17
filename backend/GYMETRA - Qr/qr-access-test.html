@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Simulador de Acceso QR</title>
+</head>
+<body>
+    <h2>Simular Entrada/Salida de Usuario</h2>
+    <form id="form">
+    <label for="userId">ID de usuario:</label>
+    <input type="text" id="userId" name="userId" required>
+    <label for="branchId">ID de sucursal:</label>
+    <input type="text" id="branchId" name="branchId" required>
+    <button type="button" onclick="marcar('ingreso')">Marcar Entrada</button>
+    <button type="button" onclick="marcar('salida')">Marcar Salida</button>
+    </form>
+    <pre id="result"></pre>
+    <script>
+        async function marcar(tipo) {
+            const userId = document.getElementById('userId').value;
+            const branchId = document.getElementById('branchId').value;
+            if (!userId || !branchId) return;
+            const endpoint = tipo === 'ingreso' ? '/api/access-log/entrada' : '/api/access-log/salida';
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, branchId })
+            });
+            const data = await res.json();
+            document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+        }
+    </script>
+</body>
+</html>
