@@ -14,7 +14,7 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**") // todos los endpoints
-            .allowedOriginPatterns("*")
+            .allowedOriginPatterns("http://192.168.0.14:*", "https://gymetra.duckdns.org", "http://localhost:*")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);

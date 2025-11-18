@@ -9,47 +9,47 @@ services:
       - "5000:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    container_name: develop-postgres
+    container_name: prod-postgres
     restart: unless-stopped
 
   # Backend GYMETR-login from gymetra v1_develop repository
 
   gymetr-login:
-    build: ./backend/GYMETR-login
+    image: quiroga148/gymetr-login:latest
     ports:
       - "8080:8080"
-    container_name: develop-gymetr-login
+    container_name: prod-gymetr-login
     depends_on:
       - postgres
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/gymdb_dev
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/gymdb
 
   # Backend GYMETR-Membership from gymetra v1_develop repository
 
   gymetr-membership:
-    build: ./backend/GYMETR-Membership
+    image: quiroga148/gymetr-membership:latest
     ports:
       - "8081:8081"
-    container_name: develop-gymetr-membership
+    container_name: prod-gymetr-membership
     depends_on:
       - postgres
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/gymdb_dev
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/gymdb
 
   # Backend GYMETRA - Qr from gymetra v1_develop repository
 
   gymetra-qr:
-    build: ./backend/GYMETRA-qr
+    image: quiroga148/gymetra-qr:latest
     ports:
       - "8090:8090"
-    container_name: develop-gymetra-qr
+    container_name: prod-gymetra-qr
     depends_on:
       - postgres
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/gymdb_dev
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/gymdb
 
 volumes:
   postgres_data:
