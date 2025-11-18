@@ -56,10 +56,10 @@ ARG GIT_COMMIT
 ARG BUILD_TIME
 
 LABEL org.opencontainers.image.title="gymetra-backend" \
-			org.opencontainers.image.source="https://github.com/Sebas-Quiroga/GYMETRA-V1" \
-			org.opencontainers.image.revision="$GIT_COMMIT" \
-			org.opencontainers.image.created="$BUILD_TIME" \
-			org.opencontainers.image.description="Backend GYMETRA (Login)"
+      org.opencontainers.image.source="https://github.com/Sebas-Quiroga/GYMETRA_backend" \
+      org.opencontainers.image.revision="$GIT_COMMIT" \
+      org.opencontainers.image.created="$BUILD_TIME" \
+      org.opencontainers.image.description="Backend GYMETRA (Login)"
 
 COPY --from=build /workspace/target/*.jar app.jar
 

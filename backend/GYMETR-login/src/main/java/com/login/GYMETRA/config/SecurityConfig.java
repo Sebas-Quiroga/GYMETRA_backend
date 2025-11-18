@@ -35,21 +35,15 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+
                         // Permitir preflight (CORS)
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Rutas públicas
-                        .requestMatchers(
-                                "/api/auth/**",                         // ✅ todas las rutas de auth públicas
-                                "/api/roles/**",                         // ✅ rutas de roles públicas
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html"
-                        ).permitAll()
+                        // Permitir TODAS las rutas (pero JWT aún funciona si lo usas)
+                        .requestMatchers("/**").permitAll()
 
-                        // Todo lo demás requiere autenticación
-                        .anyRequest().authenticated()
                 )
+                // Mantener el filtro JWT (si se envía token lo valida)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -57,18 +51,25 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
+        CorsConfiguration config = new CorsConfiguration();
 
-        // ✅ Orígenes permitidos
-        configuration.setAllowedOriginPatterns(List.of("*"));
+        // 🔥 Permitir absolutamente todos los orígenes
+        config.setAllowedOriginPatterns(List.of("*"));
 
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true);
+        // 🔥 Permitir todos los métodos
+        config.setAllowedMethods(List.of("*"));
 
-        // Aplicar configuración global
+        // 🔥 Permitir todos los headers
+        config.setAllowedHeaders(List.of("*"));
+
+        // 🔥 Exponer todos los headers (útil para Authorization)
+        config.setExposedHeaders(List.of("*"));
+
+        // 🔥 Permitir credenciales (cookies, Authorization, etc.)
+        config.setAllowCredentials(true);
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration("/**", config);
 
         return source;
     }
