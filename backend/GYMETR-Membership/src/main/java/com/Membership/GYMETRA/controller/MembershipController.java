@@ -29,12 +29,16 @@ public class MembershipController {
         return ResponseEntity.ok(memberships);
     }
 
-    // Endpoint específico para obtener membresías disponibles (alias)
-    @Operation(summary = "Listar membresías disponibles", description = "Obtiene una lista de membresías disponibles para compra")
+    // Endpoint específico para obtener membresías disponibles (filtradas por estado)
+    @Operation(summary = "Listar membresías disponibles", description = "Obtiene una lista de membresías disponibles para compra (solo activas)")
     @GetMapping("/memberships/available")
     public ResponseEntity<List<Membership>> getAvailableMemberships() {
-        List<Membership> memberships = membershipService.getAllMemberships();
-        return ResponseEntity.ok(memberships);
+        List<Membership> allMemberships = membershipService.getAllMemberships();
+        // Filtrar solo membresías con estado "available" o "ACTIVE"
+        List<Membership> availableMemberships = allMemberships.stream()
+            .filter(membership -> "available".equals(membership.getStatus()) || "ACTIVE".equals(membership.getStatus()))
+            .collect(java.util.stream.Collectors.toList());
+        return ResponseEntity.ok(availableMemberships);
     }
 
     // Endpoint para obtener todas las membresías de usuario

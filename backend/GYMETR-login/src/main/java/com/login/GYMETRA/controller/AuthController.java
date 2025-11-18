@@ -103,21 +103,6 @@ public class AuthController {
         return ResponseEntity.ok(users);
     }
 
-    // 👤 OBTENER USUARIO POR ID
-    @Operation(summary = "Obtener usuario por ID", description = "Devuelve un usuario específico por su ID")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Usuario encontrado exitosamente"),
-            @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
-    })
-    @GetMapping("/users/{userId}")
-    public ResponseEntity<User> getUserById(
-            @Parameter(description = "ID del usuario", required = true)
-            @PathVariable Long userId) {
-        return userService.getUserById(userId)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
     // ❌ ELIMINAR USUARIO
     @Operation(summary = "Eliminar usuario", description = "Elimina un usuario por su ID")
     @ApiResponses(value = {

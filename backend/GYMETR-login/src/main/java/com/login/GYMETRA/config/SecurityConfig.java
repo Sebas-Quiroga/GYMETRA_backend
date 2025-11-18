@@ -35,15 +35,28 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-
                         // Permitir preflight (CORS)
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Permitir TODAS las rutas (pero JWT aún funciona si lo usas)
-                        .requestMatchers("/**").permitAll()
+                        // Rutas públicas
+                        .requestMatchers(
+                                "/api/auth/register",
+                                "/api/auth/login",
+                                "/api/auth/forgot-password",
+                                "/api/auth/reset-password",
+                                "/api/auth/validate-token",
+                                "/api/auth/users",
+                                "/api/auth/users/{userId}",              // ✅ ahora accesible sin JWT
+                                "/api/auth/users/{userId}/status",       // ✅ actualizar estado de usuario
+                                "/api/roles/**",                         // ✅ rutas de roles públicas
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html"
+                        ).permitAll()
 
+                        // Todo lo demás requiere autenticación
+                        .anyRequest().authenticated()
                 )
-                // Mantener el filtro JWT (si se envía token lo valida)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -51,25 +64,23 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
+        CorsConfiguration configuration = new CorsConfiguration();
 
-        // 🔥 Permitir absolutamente todos los orígenes
-        config.setAllowedOriginPatterns(List.of("*"));
+        // ✅ Orígenes permitidos
+        configuration.addAllowedOriginPattern("http://*");
+        configuration.addAllowedOriginPattern("https://*");
+        configuration.addAllowedOrigin("http://localhost:8101");
+        configuration.addAllowedOrigin("http://localhost:8100");
+        configuration.addAllowedOrigin("http://175.100.1.214"); // tu IP específica
+        configuration.addAllowedOrigin("http://192.168.0.11");  // IP local (si usas red LAN)
 
-        // 🔥 Permitir todos los métodos
-        config.setAllowedMethods(List.of("*"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true);
 
-        // 🔥 Permitir todos los headers
-        config.setAllowedHeaders(List.of("*"));
-
-        // 🔥 Exponer todos los headers (útil para Authorization)
-        config.setExposedHeaders(List.of("*"));
-
-        // 🔥 Permitir credenciales (cookies, Authorization, etc.)
-        config.setAllowCredentials(true);
-
+        // Aplicar configuración global
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
+        source.registerCorsConfiguration("/**", configuration);
 
         return source;
     }

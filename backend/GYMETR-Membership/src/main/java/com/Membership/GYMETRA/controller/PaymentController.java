@@ -166,7 +166,7 @@ public class PaymentController {
                         paymentIntentId,
                         "CONFIRMED"
                     );
-
+                    
                     System.out.println("✅ PAYMENT PROCESO COMPLETADO:");
                     System.out.println("   📝 Payment ID: " + savedPayment.getId());
                     System.out.println("   🔗 UserMembership ID: " + savedMembership.getId());
@@ -182,23 +182,7 @@ public class PaymentController {
                     throw paymentException; // Re-lanzar para que el try-catch principal lo maneje
                 }
 
-                // 5. Enviar correo de bienvenida
-                try {
-                    UserMembershipResponse userInfo = userMembershipClient.getUserMembershipById(userId);
-                    if (userInfo != null) {
-                        String to = userInfo.getUser().getEmail();
-                        String userName = userInfo.getUser().getFirstName();
-                        String membershipName = membership.getPlanName();
-
-                        emailService.sendWelcomeEmail(to, userName, membershipName);
-                        System.out.println("✅ CORREO DE BIENVENIDA ENVIADO A: " + to);
-                    }
-                } catch (Exception emailError) {
-                    System.err.println("Error enviando correo de bienvenida: " + emailError.getMessage());
-                    // No lanzamos excepción para no interrumpir el proceso de pago
-                }
-
-                // 6. Respuesta con información de la membresía creada
+                // 5. Respuesta con información de la membresía creada
                 Map<String, Object> response = Map.of(
                     "message", "Pago confirmado y membresía activada",
                     "userMembershipId", savedMembership.getId(),

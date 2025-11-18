@@ -29,7 +29,6 @@ public class UserService {
     private final UserRoleRepository userRoleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-    private final EmailService emailService;
 
     private static final String DEFAULT_USER_ROLE = "Client";
 
@@ -66,9 +65,6 @@ public class UserService {
 
             User savedUser = userRepository.save(user);
             String token = jwtService.generateToken(buildJwtClaims(savedUser), savedUser);
-
-            // Enviar correo de bienvenida
-            sendWelcomeEmail(savedUser);
 
             return new JwtResponse(true, token, "Bearer", "Registro exitoso");
 
@@ -161,13 +157,6 @@ public class UserService {
     }
 
     // ==============================================================
-    // OBTENER USUARIO POR ID
-    // ==============================================================
-    public Optional<User> getUserById(Long userId) {
-        return userRepository.findById(userId);
-    }
-
-    // ==============================================================
     // ELIMINAR USUARIO
     // ==============================================================
     @Transactional
@@ -243,33 +232,6 @@ public class UserService {
                 .map(ur -> ur.getRole().getRoleId())
                 .collect(Collectors.toList()));
         return claims;
-    }
-
-    // ==============================================================
-    // ENVÍO DE CORREO DE BIENVENIDA
-    // ==============================================================
-    private void sendWelcomeEmail(User user) {
-        String subject = "🌟 ¡Bienvenido a GYMETRA, " + user.getFirstName() + "! 🌟";
-
-        String body = "¡Hola " + user.getFirstName() + "!\n\n"
-                + "🎉 **¡Felicitaciones!** Tu cuenta en GYMETRA ha sido creada exitosamente. 🎉\n\n"
-                + "Estamos emocionados de tenerte como parte de nuestra comunidad fitness. "
-                + "Ahora tienes acceso completo a todas las herramientas y recursos que te ayudarán "
-                + "a alcanzar tus objetivos de salud y bienestar.\n\n"
-                + "🚀 **¿Qué puedes hacer ahora?**\n"
-                + "• Accede a rutinas personalizadas de entrenamiento\n"
-                + "• Registra tu progreso diario\n"
-                + "• Conecta con entrenadores profesionales\n"
-                + "• Descubre consejos nutricionales\n\n"
-                + "💪 **¡Tu viaje hacia una mejor versión de ti mismo comienza aquí!**\n\n"
-                + "Si tienes alguna duda o necesitas ayuda, nuestro equipo está aquí para apoyarte. "
-                + "No dudes en contactarnos a través de la plataforma.\n\n"
-                + "¡Éxito en tu transformación!\n\n"
-                + "Con entusiasmo,\n"
-                + "🏋️‍♂️ **El Equipo de GYMETRA**\n"
-                + "Tu compañero en el camino hacia el bienestar";
-
-        emailService.sendEmail(user.getEmail(), subject, body);
     }
 
     // ==============================================================

@@ -5,6 +5,7 @@ import com.GYMETRA.GYMETRA.qr.service.QrAccessService;
 import com.GYMETRA.GYMETRA.qr.service.QrBusinessService;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/qr-access")

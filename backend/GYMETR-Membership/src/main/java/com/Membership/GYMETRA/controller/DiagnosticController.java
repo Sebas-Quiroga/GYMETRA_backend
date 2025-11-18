@@ -21,7 +21,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/diagnostic")
-@CrossOrigin(origins = {"http://localhost:5501", "http://localhost:8100", "http://3.15.181.40/:3000", "http://3.15.181.40:8081"}, allowCredentials = "true")
+@CrossOrigin(origins = {"http://localhost:5501", "http://localhost:8100", "http://localhost:3000", "http://localhost:8081"}, allowCredentials = "true")
 @Tag(name = "Diagnóstico", description = "Controlador para pruebas y diagnóstico del sistema")
 public class DiagnosticController {
 

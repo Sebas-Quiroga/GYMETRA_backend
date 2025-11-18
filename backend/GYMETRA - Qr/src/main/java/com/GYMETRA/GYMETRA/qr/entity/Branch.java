@@ -1,7 +1,7 @@
 package com.GYMETRA.GYMETRA.qr.entity;
 
 import jakarta.persistence.*;
-
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "branch")
