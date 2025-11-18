@@ -59,8 +59,8 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // ✅ Orígenes permitidos
-        configuration.setAllowedOriginPatterns(List.of("http://192.168.0.14:*", "https://gymetra.duckdns.org", "http://localhost:*"));
+        // ✅ Orígenes permitidos (usando orígenes exactos para compatibilidad con credentials)
+        configuration.setAllowedOrigins(List.of("http://192.168.0.14:8100", "https://gymetra.duckdns.org", "http://localhost:8100", "http://localhost:3000", "http://localhost:4200"));
 
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
