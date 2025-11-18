@@ -11,7 +11,7 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git branch: 'develop', url: 'https://github.com/Sebas-Quiroga/GYMETRA_backend.git'
+                git branch: 'main', url: 'https://github.com/Sebas-Quiroga/GYMETRA_backend.git'
             }
         }
 
